@@ -1,73 +1,42 @@
 # Shadowrocket Stable Config
 
-适用于 iPhone / Shadowrocket 的**稳定优先**分流配置：国内服务直连、AI / Spotify 走所选代理节点、AliDNS + DNSPod DoH、少量高确定性广告域名拦截。
+一个稳定优先、面向日常使用的 Shadowrocket 分流配置。支持 ChatGPT / Claude / Gemini 代理、国内 App 和支付直连、Apple Music 账户直连、AliDNS / DNSPod 加密 DNS，以及少量保守广告拦截规则。
 
-> **安全取向**：不包含节点、机场订阅、密钥、账号；不使用远程广告黑名单、MITM、第三方响应脚本。无法保证去除 Spotify 免费版音频广告，也无法保证所有 App 100% 兼容。
+**稳定优先原则：** 不下载第三方大型黑名单，不运行 MITM、证书解密或远程脚本，不上传节点、机场订阅或任何账号凭据。Spotify 免费版音频广告仍可能出现。
 
-## 快速使用
+## Shadowrocket 订阅
 
-1. 在 Shadowrocket 中备份当前可用配置。
-2. 导入 `config/shadowrocket.conf`，启用「配置」分流模式，继续使用原有节点。
-3. 优先验证 **微信扫码点单 → Apple Music 账户 → ChatGPT → Spotify**。
-4. 有异常立即恢复上一版，并通过 Shadowrocket 连接记录确认真实命中规则。
+推荐 GitHub Pages 固定订阅地址（需要先在 Settings → Pages → Build and deployment 中将 Source 设为 GitHub Actions）：
 
-## 固定订阅 URL（GitHub Pages）
+https://eikooc7.github.io/shadowrocket-stable-config/shadowrocket.conf
 
-启用 GitHub Pages 后，长期稳定的订阅地址：
+Pages 尚未部署时，可使用已提交的 GitHub Raw 文件：
 
-`https://eikooc7.github.io/shadowrocket-stable-config/shadowrocket.conf`
+https://raw.githubusercontent.com/eikooc7/shadowrocket-stable-config/main/config/shadowrocket.conf
 
-需要先在仓库 **Settings → Pages → Build and deployment → Source: GitHub Actions** 中启用 Pages，并确认 `Publish stable config` 工作流成功。
+**使用方法：** 在 Shadowrocket 备份当前可用配置，导入上述地址或 `config/shadowrocket.conf`，保持现有机场节点，切换「全局路由」为「配置」。优先实测微信扫码点单、Apple Music 账户、ChatGPT 对话、Spotify 音乐播放。手机端是否自动刷新取决于 Shadowrocket 的订阅更新设置；GitHub 发布不等于手机立即切换配置。
 
-如果暂时不启用 Pages，也可使用 GitHub Raw 文件（取决于网络可访问性）：
+## CI/CD
 
-`https://raw.githubusercontent.com/eikooc7/shadowrocket-stable-config/main/config/shadowrocket.conf`
+- [Config CI](.github/workflows/ci.yml)：对推送与 PR 静态校验 95 条分流规则、16 项关键域名样本，以及 DNS、MITM、广告域名列表；生成预览 artifact。
+- [Publish stable config](.github/workflows/pages.yml)：当正式配置更新到 main 后构建并发布 GitHub Pages；也可手动触发。
+- [Review upstream ad-domain candidates](.github/workflows/monitor.yml)：每周检查少量上游广告域名，只创建**非生效**候选 PR，不直接更改正式配置。
+- [Dependabot](.github/dependabot.yml)：定期提出 Actions 依赖版本更新。
 
-**注意**：GitHub 上配置变更不代表手机端瞬间自动更新；请在 Shadowrocket 的配置订阅中启用它支持的定期更新/手动刷新。启用前，先确认你的网络能够访问此 URL。
+没有任何静态测试可以完全模拟真实 iPhone 网络；支付、小程序、Apple Music 和 Spotify 音频广告都需要实测。任何误杀应回滚 Git commit，而不是继续扩大规则库。
 
-## CI/CD 设计
-
-- `Config CI`：每次 push/PR 静态检查规则格式、DNS、MITM 关闭、广告拦截白名单、关键域名匹配顺序，输出预览 artifact。
-- `Publish stable config`：`main` 分支的正式配置通过测试后发布到 GitHub Pages（需要先启用 Pages）。
-- `Review upstream ad-domain candidates`：每周检测 StevenBlack/hosts 中的少量候选域名，只将差异提交 PR 到**不生效**的 `rules/review-candidates.txt`；不自动加入正式拦截规则。
-- Dependabot：每周提出 Actions 依赖更新 PR。
-
-**自动检查 ≠ 无审查地自动扩大广告拦截范围。** 这是为了避免再次出现 Apple Music、银行或扫码点餐故障。规则要进入正式版，必须人工审查并经 CI 后合并 `main`。可在 GitHub 设置 `main` 分支保护规则，要求 `verify` CI 通过才允许合并。实际设备端验证仍然必要。
-
-## 本地检查
+## 本地测试
 
 ```bash
 python3 scripts/validate.py
 python3 scripts/build.py
 ```
 
-`site/` 是生成产物，不需要提交到仓库。
+生成 `site/shadowrocket.conf` 和 `site/version.json`，用于发布。正式版源文件在 `config/shadowrocket.conf`。
 
-## 故障回退
+## 安全发布与回退
 
-1. 立即在 Shadowrocket 切回已知可用配置。
-2. 对 DNS 故障，可临时改用：
-   `dns-server = system` / `fallback-dns-server = system`
-3. 查看 Github commit 历史，必要时 Revert 最近的相关提交并重新部署 Pages。
-4. 不建议在银行、支付或 Apple 账户域名上开启 HTTPS 解密。
+建议启用 main 分支保护，并要求 CI 成功才能合并。对新的广告 REJECT 规则，必须人工审核对应域名是否与 Apple Music、微信小程序、银行支付、AI 登录共用基础设施。遇到正常 App 异常，请立即在 Shadowrocket 切回备份配置，查看连接日志后再修改规则。
 
-## 项目首次上 GitHub
+技术说明：精准拒绝 `ads.spotify.com` 的规则放在 `spotify.com` 后缀代理规则之前，避免首次匹配导致广告域名未被拦截；这不保证拦截 Spotify 音频广告。
 
-请在 `eikooc7` GitHub 账户下创建一个**公开的空仓库**，名为 `shadowrocket-stable-config`，**不要勾选自动生成 README**。在解压后的项目目录执行：
-
-```bash
-git init
-git add .
-git commit -m "feat: initialize stable Shadowrocket config and CI/CD"
-git branch -M main
-git remote add origin https://github.com/eikooc7/shadowrocket-stable-config.git
-git push -u origin main
-```
-
-建议使用 GitHub Desktop 或 `gh auth login` / Git 凭据助手进行身份验证，**不要把 GitHub Token 写入仓库**。
-
-## 特别说明
-
-- 原配置中 `DOMAIN-SUFFIX,spotify.com,PROXY` 在 `DOMAIN,ads.spotify.com,REJECT` 之前，按顺序匹配会使后者不可达。仓库版调整为先精确 REJECT，再宽泛 PROXY。
-- 静态模拟只检查已列出的常见域名；餐饮小程序使用的第三方实际域名无法全部预测。
-- GitHub Pages 公共托管可能在某些网络条件下无法访问，无法对其可达性作保证。
