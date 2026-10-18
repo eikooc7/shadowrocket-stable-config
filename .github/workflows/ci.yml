@@ -19,7 +19,7 @@ jobs:
       - name: Build subscription artifact
         run: python scripts/build.py
       - name: Save artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: shadowrocket-config
           path: site/
