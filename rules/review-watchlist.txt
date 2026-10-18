@@ -1,0 +1,9 @@
+# Small set of domains only; updates are suggestions, never active rules
+ads.facebook.com
+googleadservices.com
+analytics.google.com
+google-analytics.com
+tracking.spotify.com
+log.spotify.com
+ads.twitter.com
+appsflyer.com
