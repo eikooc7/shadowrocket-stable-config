@@ -1,0 +1,31 @@
+name: Review upstream ad-domain candidates
+on:
+  schedule:
+    - cron: '17 3 * * 3'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  suggest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch limited candidates; never change production config
+        run: python scripts/check_upstream.py
+      - name: Create review-only PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          add-paths: rules/review-candidates.txt
+          branch: automation/upstream-ad-candidates
+          delete-branch: true
+          commit-message: 'chore: refresh upstream candidates'
+          title: 'Review inactive ad-domain candidates'
+          body: |
+            Candidate domains only. These have no effect on the live configuration.
+            Manually check Apple Music, WeChat mini-program payments,
+            ChatGPT/Claude/Gemini login and Spotify playback before using any.
