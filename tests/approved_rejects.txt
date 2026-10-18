@@ -1,0 +1,5 @@
+# All active rejects. Modifications require explicit review.
+DOMAIN,ads.spotify.com,REJECT
+DOMAIN,adeventtracker.spotify.com,REJECT
+DOMAIN-SUFFIX,doubleclick.net,REJECT
+DOMAIN-SUFFIX,googlesyndication.com,REJECT
