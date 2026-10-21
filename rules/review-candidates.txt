@@ -1,1 +1,6 @@
-# Optional upstream suggestions, NEVER loaded by Shadowrocket.
+# Candidate domains from StevenBlack/hosts; NOT ACTIVE. Manual review required.
+ads.twitter.com
+analytics.google.com
+appsflyer.com
+google-analytics.com
+googleadservices.com
